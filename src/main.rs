@@ -1,41 +1,24 @@
-/*
-Integrates Polars with AWS Lambda.
-*/
+use axum::{extract::Path, response::Json, routing::get, Router};
+use lambda_http::{run, Error};
+use polars_lambda_axum::calculate;
+use serde_json::{json, Value};
 
-use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use polars_lambda::calculate;
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize)]
-struct Request {
-    filter: f64,
+async fn root() -> &'static str {
+    "Hello, Polars"
 }
 
-#[derive(Serialize)]
-struct Response {
-    payload: String,
+//simple url: /iris/filter/5
+async fn get_filter(Path(value): Path<f64>) -> Json<Value> {
+    let df = calculate(value).unwrap();
+    let json = json!({
+        "payload": format!("{}", df),
+    });
+    Json(json)
 }
 
-async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
-    // Extract filter float from the request
-    let filter_value = event.payload.filter;
-
-    // Run the DataFrame calculation
-    let df = calculate(filter_value).unwrap();
-
-    // Prepare the response
-    let resp = Response {
-        payload: format!("{}", df),
-    };
-
-    // Return `Response` (it will be serialized to JSON automatically by the runtime)
-    Ok(resp)
-}
-
-// The main function is the entry point of the program.
-// It returns a Result type, which is either Ok or Err.
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    // required to enable CloudWatch error logging by the runtime
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -44,5 +27,8 @@ async fn main() -> Result<(), Error> {
         .without_time()
         .init();
 
-    run(service_fn(function_handler)).await
+    let app = Router::new()
+        .route("/", get(root))
+        .route("/iris/filter/:value", get(get_filter));
+    run(app).await
 }
