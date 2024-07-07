@@ -32,7 +32,7 @@ deploy:
 
 ### Invoke on AWS
 aws-invoke:
-	cargo lambda invoke --remote polars-lambda --data-ascii "{ \"filter\": 5.0}"
+	cargo lambda invoke --remote polars-lambda-axum --data-ascii "{ \"filter\": 5.0}"
 
 run:
 	cargo run
