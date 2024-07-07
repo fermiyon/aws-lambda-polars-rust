@@ -11,7 +11,7 @@ By Selman Karaosmanoglu
 
 ## Overview
 
-This repository provides a guide for deploying Rust application on AWS Lambda
+This repository provides a guide for deploying a Rust-based AWS Lambda function utilizing the Polars library on AWS Lambda
 
 ## Architecture
 
